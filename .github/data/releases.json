@@ -1,0 +1,14 @@
+{
+  "os": "opnsense",
+  "releases": [
+    {
+      "tag": "26.7",
+      "release": "26.7",
+      "arch": "x86_64",
+      "sync": "rsync,scp,nfs,tar",
+      "shutdown": "/sbin/shutdown -p now",
+      "desktop": false,
+      "build": true
+    }
+  ]
+}

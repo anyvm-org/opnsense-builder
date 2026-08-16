@@ -1,0 +1,15 @@
+
+# Everything this file would normally do is done by hooks/host_enablessh.py
+# over the serial console instead, because OPNsense has no offline
+# preparation path: no cloud-init (it is an appliance driven entirely by
+# /conf/config.xml) and no libguestfs write access (the root is UFS). The
+# host pubkey, the guest's own keypair, the WAN/DHCP switch and sshd are all
+# configured there, before ssh exists at all.
+#
+# The file itself has to exist because build.py copies it unconditionally
+# when it builds enablessh.local. Keep it a harmless no-op: sshd is already
+# configured through config.xml by the time anything could push this, and
+# rewriting /etc/ssh/sshd_config behind OPNsense's back would be undone by
+# the next configd run anyway.
+
+echo "enablessh: opnsense is configured via /conf/config.xml, nothing to do here."
