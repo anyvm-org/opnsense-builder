@@ -22,3 +22,15 @@ that are mandatory: the single NIC has to become WAN with DHCP (the shipped
 config makes it a static-IP LAN that slirp cannot reach) and sshd has to be
 switched on in config.xml, since it is not even an rc script on a fresh
 appliance.
+
+How the images are built:
+
+Each image is built automatically in the
+[anyvm-org/opnsense-builder](https://github.com/anyvm-org/opnsense-builder)
+repo's GitHub Actions: it downloads the official OPNsense nano disk
+image, boots it in QEMU, configures console and ssh access, and exports
+the disk as a compressed qcow2 image. No interactive installer is run.
+
+Upstream media: the official OPNsense images from
+https://pkg.opnsense.org/releases/ (download page:
+https://opnsense.org/download/).
