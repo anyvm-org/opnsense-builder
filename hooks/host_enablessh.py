@@ -160,6 +160,25 @@ enter()
 waitForText("MARK_AUTHKEYS_1_1", "180")
 time.sleep(2)
 
+# --- 3.6 AcceptEnv, via the sanctioned drop-in directory ---------------------
+# The sshd_config that openssh_configure_do() generates has NO AcceptEnv line,
+# and build.py's SendEnv check requires the guest to accept GITHUB_* (run
+# 32076620269 died exactly there: "SendEnv is not working" after an otherwise
+# healthy build). Appending to the generated file does not survive
+# regeneration (the MaxAuthTries lesson above) -- but the generated file's own
+# FIRST line is `Include /usr/local/etc/ssh/sshd_config.d/*.conf`, upstream's
+# sanctioned hole for custom options. A plain file there is ordinary UFS
+# state: configd regenerates sshd_config, never this directory, so the
+# setting survives regeneration, this build's reboot, and every boot of the
+# exported image (anyvm's runtime relies on SendEnv the same way). Written
+# BEFORE the reboot so the rebooted sshd starts with it already in force.
+string("mkdir -p /usr/local/etc/ssh/sshd_config.d && "
+       "printf 'AcceptEnv *\\n' > /usr/local/etc/ssh/sshd_config.d/anyvm.conf; "
+       "echo MARK_ACCEPTENV_$?")
+enter()
+waitForText("MARK_ACCEPTENV_0", "120")
+time.sleep(2)
+
 # --- 4. apply -----------------------------------------------------------------
 # A reboot is what makes OPNsense re-read config.xml, reconfigure the
 # interface and start sshd. Trying to poke configd for a partial reload is
@@ -266,6 +285,15 @@ string("if [ ! -e /etc/ssh/sshd_config ]; then mkdir -p /etc/ssh && "
        "echo MARK_SSHDCFG_$(test -r /etc/ssh/sshd_config && echo 1 || echo 0)")
 enter()
 waitForText("MARK_SSHDCFG_1", "180")
+time.sleep(2)
+
+# The AcceptEnv drop-in written before the reboot must still be there AND the
+# running sshd must actually be applying it -- sshd -T prints the effective
+# config, so this catches both a lost file and an Include that stopped
+# matching, right here instead of minutes later in build.py's SendEnv check.
+string("echo MARK_ACCEPTENV2_$(/usr/local/sbin/sshd -T 2>/dev/null | grep -ci '^acceptenv')")
+enter()
+waitForText("MARK_ACCEPTENV2_1", "180")
 time.sleep(2)
 
 log("opnsense enablessh: WAN has an address and sshd is listening")
